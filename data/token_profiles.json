@@ -1,12 +1,12 @@
 {
     "tokens": [
         {
-            "token": "skrrpowpow",
-            "dcfduid": "none",
-            "sdcfduid": "none",
-            "fingerprint": "none",
-            "super_property": "none",
-            "user_agent": "none"
+            "token": "MTE2MjEzMzcxOTU1ODEyNzY2Ng.Gi9HNl.P02Dz48CfKLhi9rlFDoVQi1cg-QHSFElE1ZDgM",
+            "dcfduid": "85855ab09ac811ee9876a37b78e3af3e",
+            "sdcfduid": "85855ab19ac811ee9876a37b78e3af3e260bc5a6083aac82672f67828c428f7d87f4f8f474b5ea04ab2756b6e870b40e",
+            "fingerprint": "1184971629189673030.zEnDeK0jDJVeP6aMGtCS6lEIVdQ",
+            "super_property": "eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiRGlzY29yZCBDbGllbnQiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfdmVyc2lvbiI6IjAuMC4yNjQiLCJvc192ZXJzaW9uIjoiMTUuNi4wIiwib3NfYXJjaCI6Ing2NCIsInN5c3RlbV9sb2NhbGUiOiJlbi1VUyIsImNsaWVudF9idWlsZF9udW1iZXIiOjEwODkyNCwiY2xpZW50X2V2ZW50X3NvdXJjZSI6bnVsbH0=",
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9003 Chrome/91.0.4472.164 Electron/13.4.0 Safari/537.36"
         }
     ]
 }
