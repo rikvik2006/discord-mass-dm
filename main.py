@@ -42,6 +42,7 @@ class Discord(object):
         self.blacklisted_users = []
         self.users = []
 
+        self.cli_setup = True
         self.guild_name = None
         self.guild_id = None
         self.channel_id = None
@@ -90,6 +91,7 @@ class Discord(object):
                 config = json.load(file)
                 for user in config["blacklisted_users"]:
                     self.blacklisted_users.append(str(user))
+                self.cli_setup = config["cli_setup"]["enabled"]
                 self.send_embed = config["send_embed"]
                 self.send_message = config["send_normal_message"]
                 self.captcha_api_key = config["captcha_api_key"]
@@ -134,40 +136,12 @@ class Discord(object):
             f"{self.g}[+]{self.rst} Successfully loaded {self.red}%s{self.rst} token(s)\n"
             % (len(self.tokens))
         )
-        self.mode = input(
-            f"{self.question}Use Proxies? {self.opbracket}y/n{self.closebrckt}{self.arrow}"
-        )
-        if self.mode.lower() == "y":
-            self.use_proxies = True
-            self.proxy_typee = input(
-                f"{self.opbracket2}1{self.closebrckt2} http   | {self.opbracket2}2{self.closebrckt2} https\n{self.opbracket2}3{self.closebrckt2} socks4 | {self.opbracket2}4{self.closebrckt2} socks5\n{self.question}Proxy type{self.arrow}"
-            )
-            if self.proxy_typee == "1":
-                self.proxy_type = "http"
-            elif self.proxy_typee == "2":
-                self.proxy_type = "https"
-            elif self.proxy_typee == "3":
-                self.proxy_type = "socks4"
-            elif self.proxy_typee == "4":
-                self.proxy_type = "socks5"
-            else:
-                self.use_proxies = False
-        else:
-            self.use_proxies = False
+
+        # TODO: Add an CLI configurator check
 
         self.message = msg
         self.embed = self.embd
-        try:
-            self.delay = float(input(f"{self.question}Delay{self.arrow}"))
-        except Exception:
-            self.delay = 5
-        self.backup_delay = self.delay
-        try:
-            self.ratelimit_delay = float(
-                input(f"{self.question}Rate limit Delay{self.arrow}")
-            )
-        except Exception:
-            self.ratelimit_delay = 300
+
         self.total_tokens = len(self.tokens)
         self.invalid_tokens_start = 0
         self.locked_tokens_start = 0
@@ -187,7 +161,74 @@ class Discord(object):
         self.total_server_leave_locked = 0
         self.total_server_leave_invalid = 0
 
-        print()
+        if self.cli_setup:
+            self.mode = input(
+                f"{self.question}Use Proxies? {self.opbracket}y/n{self.closebrckt}{self.arrow}"
+            )
+            if self.mode.lower() == "y":
+                self.use_proxies = True
+                self.proxy_typee = input(
+                    f"{self.opbracket2}1{self.closebrckt2} http   | {self.opbracket2}2{self.closebrckt2} https\n{self.opbracket2}3{self.closebrckt2} socks4 | {self.opbracket2}4{self.closebrckt2} socks5\n{self.question}Proxy type{self.arrow}"
+                )
+                if self.proxy_typee == "1":
+                    self.proxy_type = "http"
+                elif self.proxy_typee == "2":
+                    self.proxy_type = "https"
+                elif self.proxy_typee == "3":
+                    self.proxy_type = "socks4"
+                elif self.proxy_typee == "4":
+                    self.proxy_type = "socks5"
+                else:
+                    self.use_proxies = False
+            else:
+                self.use_proxies = False
+
+            try:
+                self.delay = float(input(f"{self.question}Delay{self.arrow}"))
+            except Exception:
+                self.delay = 5
+            self.backup_delay = self.delay
+            try:
+                self.ratelimit_delay = float(
+                    input(f"{self.question}Rate limit Delay{self.arrow}")
+                )
+            except Exception:
+                self.ratelimit_delay = 300
+
+            print()
+        else:
+            with open("./data/config.json", "r") as file:
+                data = json.load(file)
+
+                disabled_cli_settings = data["cli_setup"]
+                enable_proxy = "proxy_type" in disabled_cli_settings
+                if enable_proxy:
+                    if disabled_cli_settings["proxy_type"] in [
+                        "http",
+                        "https",
+                        "socks4",
+                        "socks5",
+                    ]:
+                        self.use_proxies = True
+                        self.proxy_type = data["proxy_type"]
+                    else:
+                        self.use_proxies = False
+                else:
+                    self.use_proxies = False
+
+                # if "delay" or "ratelimit_delay" use the default value (5, 300)
+
+                if "delay" in disabled_cli_settings:
+                    self.delay = data["delay"]
+                    self.backup_delay = self.delay
+                else:
+                    self.delay = 5
+                    self.backup_delay = self.delay
+
+                if "ratelimit_delay" in disabled_cli_settings:
+                    self.ratelimit_delay = data["ratelimit_delay"]
+                else:
+                    self.ratelimit_delay = 300
 
     def stop(self):
         process = psutil.Process(os.getpid())
