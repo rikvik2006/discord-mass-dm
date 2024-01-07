@@ -985,13 +985,15 @@ class Discord(object):
             print()
 
             members = scrape(self.tokens[0], self.guild_id, self.channel_id)
-            with open("data/users.txt", "w") as t:
-                data = ""
-                for member in members:
-                    if member not in self.users:
-                        self.users.append(member)
-                        data += member + "\n"
-                t.write(data)
+
+            if self.cli_setup:
+                with open("data/users.txt", "w") as t:
+                    data = ""
+                    for member in members:
+                        if member not in self.users:
+                            self.users.append(member)
+                            data += member + "\n"
+                    t.write(data)
 
             print()
             logging.info(
@@ -1005,8 +1007,9 @@ class Discord(object):
             return "success"
 
         async def mass_dm():
-            with open("data/users.txt", encoding="utf-8") as f:
-                self.users = [i.strip() for i in f]
+            if self.cli_setup:
+                with open("data/users.txt", encoding="utf-8") as f:
+                    self.users = [i.strip() for i in f]
             logging.info("Sending messages to %s users." % (len(self.users)))
             async with TaskPool(1_000) as pool:
                 for user in self.users:
