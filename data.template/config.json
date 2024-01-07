@@ -10,6 +10,11 @@
     "enable": true,
     "proxy_type": "http",
     "delay": 15,
-    "ratelimit_delay": 20
+    "ratelimit_delay": 20,
+    "scrape_user": {
+      "guild_id": "Guild ID",
+      "channel_id": "Channel ID",
+      "invite": "Server Invite Code"
+    }
   }
 }

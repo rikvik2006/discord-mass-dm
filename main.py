@@ -228,6 +228,18 @@ class Discord(object):
                 else:
                     self.ratelimit_delay = 300
 
+                if "scrape_user" in disabled_cli_settings:
+                    scrape_user = disabled_cli_settings["scrape_user"]
+
+                    if "guild_id" in scrape_user:
+                        self.guild_id = scrape_user["guild_id"]
+
+                    if "channel_id" in scrape_user:
+                        self.channel_id = scrape_user["channel_id"]
+
+                    if "invite" in scrape_user:
+                        self.invite = scrape_user["invite"]
+
     def stop(self):
         process = psutil.Process(os.getpid())
         process.terminate()
@@ -949,8 +961,6 @@ class Discord(object):
                     .replace("http:", "")
                     .replace("discordapp.com", "")
                 )
-            else:
-                
             try:
                 headers = await self.headers(self.tokens[0])
                 async with ClientSession(headers=headers) as hoemotion:
