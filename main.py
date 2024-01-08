@@ -994,6 +994,10 @@ class Discord(object):
                             self.users.append(member)
                             data += member + "\n"
                     t.write(data)
+            else:
+                for member in members:
+                    if member not in self.users:
+                        self.users.append(member)
 
             print()
             logging.info(
