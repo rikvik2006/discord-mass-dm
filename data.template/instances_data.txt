@@ -1,0 +1,1 @@
+token,guild_id,channel_id,black_listed_role1,black_listed_role2,black_listed_role3,... ; Comment

@@ -55,21 +55,29 @@ def main():
 
             # Start main.py
             if use_tmux:
-                os.system("mkdir -p ./logs/")
+                os.system("mkdir -p ../logs/")
 
-                process = subprocess.Popen(
-                    [
-                        "tmux",
-                        "new",
-                        "-d",
-                        "-s",
-                        f"mass-dm-{discord_username}",
-                        "'exec python3 main.py 2>&1 | tee -a ./logs/{discord_username}.log'",
-                    ]
-                )
-                processes.append(process)
-                print(f"Process started: Username: {discord_username}, Token: {token}")
-                time.sleep(1)
+                command = [
+                    "tmux",
+                    "new",
+                    "-d",
+                    "-s",
+                    f"mass-dm-{discord_username}",
+                    f"exec python3 ./print.py 2>&1 | tee -a ./logs/{discord_username}.log",
+                ]
+
+                try:
+                    process = subprocess.Popen(command)
+                    process.communicate()
+                    processes.append(process)
+                    print(
+                        f"☕ Process started: Username: {discord_username}, Token: {token}"
+                    )
+                    time.sleep(1)
+                except subprocess.CalledProcessError as e:
+                    print(f"Errore nell'esecuzione del comando: {e}")
+                except Exception as e:
+                    print(f"Errore sconosciuto: {e}")
             else:
                 process = subprocess.Popen(["python", "main.py"])
                 processes.append(process)
