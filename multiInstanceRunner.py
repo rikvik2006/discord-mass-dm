@@ -36,6 +36,7 @@ def main():
     with open(f"./data/{runner_config}", "r") as file:
         runner_data = json.load(file)
         use_tmux = runner_data["use_tmux"]
+        logs_dir = runner_data["logs_dir"]
 
     # Get the tokens from instances_data.txt
     with open(f"./data/{instances_file}", "r") as file:
@@ -55,7 +56,11 @@ def main():
 
             # Start main.py
             if use_tmux:
-                os.system("mkdir -p ../logs/")
+                if logs_dir[-1] == "/" or logs_dir[-1] == "\\":
+                    formatted_logs_dir = logs_dir[-1] = "/"
+                else:
+                    formatted_logs_dir = logs_dir[-1] = "/"
+                os.system(f"mkdir -p {formatted_logs_dir}")
 
                 command = [
                     "tmux",
@@ -63,7 +68,7 @@ def main():
                     "-d",
                     "-s",
                     f"mass-dm-{discord_username}",
-                    f"exec python3 ./print.py 2>&1 | tee -a ./logs/{discord_username}.log",
+                    f"exec python3 ./main.py 2>&1 | tee -a {formatted_logs_dir}{discord_username}.log",
                 ]
 
                 try:
@@ -71,7 +76,7 @@ def main():
                     process.communicate()
                     processes.append(process)
                     print(
-                        f"☕ Process started: Username: {discord_username}, Token: {token}"
+                        f"☕ [TMUX] Process started: Username: {discord_username}, Token: {token}"
                     )
                     time.sleep(1)
                 except subprocess.CalledProcessError as e:
@@ -81,7 +86,9 @@ def main():
             else:
                 process = subprocess.Popen(["python", "main.py"])
                 processes.append(process)
-                print(f"Process started: Username: {discord_username}, Token: {token}")
+                print(
+                    f"☕ [CONSOLE] Process started: Username: {discord_username}, Token: {token}"
+                )
                 time.sleep(1)
 
     print(f"⭐ All processes were started for a total of {len(processes)} processes ⭐")

@@ -1,3 +1,4 @@
 {
-    "use_tmux": false
+    "use_tmux": false,
+    "logs_dir": "../logs"
 }
