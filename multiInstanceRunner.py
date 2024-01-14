@@ -57,9 +57,9 @@ def main():
             # Start main.py
             if use_tmux:
                 if logs_dir[-1] == "/" or logs_dir[-1] == "\\":
-                    formatted_logs_dir = logs_dir[-1] = "/"
+                    formatted_logs_dir = logs_dir[:-1] + "/"
                 else:
-                    formatted_logs_dir = logs_dir[-1] = "/"
+                    formatted_logs_dir = logs_dir + "/"
                 os.system(f"mkdir -p {formatted_logs_dir}")
 
                 command = [
