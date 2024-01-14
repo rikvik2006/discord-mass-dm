@@ -5,13 +5,15 @@ import requests
 import os
 
 
-def modify_config(guild_id, channel_id):
+def modify_config(guild_id, channel_id, blacklisted_roles: list):
     # Modify the config.json file
     config_path = "./data/config.json"
     with open(config_path, "r") as config_file:
         config_data = json.load(config_file)
+        config_data["blacklisted_roles"].clear()
         config_data["cli_setup"]["scrape_user"]["guild_id"] = guild_id
         config_data["cli_setup"]["scrape_user"]["channel_id"] = channel_id
+        config_data["blacklisted_roles"].extend(blacklisted_roles)
 
     with open(config_path, "w") as config_file:
         json.dump(config_data, config_file, indent=4)
@@ -43,8 +45,8 @@ def main():
         lines = file.readlines()
         for line in lines:
             data = line.strip().split(";")[0].strip().split(",")
-            token, guild_id, channel_id = data
-            modify_config(guild_id, channel_id)
+            token, guild_id, channel_id, *blacklisted_roles = data
+            modify_config(guild_id, channel_id, blacklisted_roles)
             update_tokens(token)
 
             # Get the discord username
