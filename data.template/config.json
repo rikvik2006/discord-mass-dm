@@ -5,5 +5,16 @@
   "blacklisted_users": [],
   "captcha_get_url": "http://2captcha.com/res.php",
   "captcha_submit_url": "http://2captcha.com/in.php",
-  "captcha_api_key": "Your API key"
+  "captcha_api_key": "Your API key",
+  "cli_setup": {
+    "enable": true,
+    "proxy_type": "http",
+    "delay": 15,
+    "ratelimit_delay": 20,
+    "scrape_user": {
+      "guild_id": "Guild ID",
+      "channel_id": "Channel ID",
+      "invite": "Server Invite Code"
+    }
+  }
 }

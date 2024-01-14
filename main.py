@@ -42,6 +42,7 @@ class Discord(object):
         self.blacklisted_users = []
         self.users = []
 
+        self.cli_setup = True
         self.guild_name = None
         self.guild_id = None
         self.channel_id = None
@@ -90,6 +91,7 @@ class Discord(object):
                 config = json.load(file)
                 for user in config["blacklisted_users"]:
                     self.blacklisted_users.append(str(user))
+                self.cli_setup = config["cli_setup"]["enable"]
                 self.send_embed = config["send_embed"]
                 self.send_message = config["send_normal_message"]
                 self.captcha_api_key = config["captcha_api_key"]
@@ -134,40 +136,12 @@ class Discord(object):
             f"{self.g}[+]{self.rst} Successfully loaded {self.red}%s{self.rst} token(s)\n"
             % (len(self.tokens))
         )
-        self.mode = input(
-            f"{self.question}Use Proxies? {self.opbracket}y/n{self.closebrckt}{self.arrow}"
-        )
-        if self.mode.lower() == "y":
-            self.use_proxies = True
-            self.proxy_typee = input(
-                f"{self.opbracket2}1{self.closebrckt2} http   | {self.opbracket2}2{self.closebrckt2} https\n{self.opbracket2}3{self.closebrckt2} socks4 | {self.opbracket2}4{self.closebrckt2} socks5\n{self.question}Proxy type{self.arrow}"
-            )
-            if self.proxy_typee == "1":
-                self.proxy_type = "http"
-            elif self.proxy_typee == "2":
-                self.proxy_type = "https"
-            elif self.proxy_typee == "3":
-                self.proxy_type = "socks4"
-            elif self.proxy_typee == "4":
-                self.proxy_type = "socks5"
-            else:
-                self.use_proxies = False
-        else:
-            self.use_proxies = False
+
+        # TODO: Add an CLI configurator check
 
         self.message = msg
         self.embed = self.embd
-        try:
-            self.delay = float(input(f"{self.question}Delay{self.arrow}"))
-        except Exception:
-            self.delay = 5
-        self.backup_delay = self.delay
-        try:
-            self.ratelimit_delay = float(
-                input(f"{self.question}Rate limit Delay{self.arrow}")
-            )
-        except Exception:
-            self.ratelimit_delay = 300
+
         self.total_tokens = len(self.tokens)
         self.invalid_tokens_start = 0
         self.locked_tokens_start = 0
@@ -187,7 +161,84 @@ class Discord(object):
         self.total_server_leave_locked = 0
         self.total_server_leave_invalid = 0
 
-        print()
+        if self.cli_setup:
+            self.mode = input(
+                f"{self.question}Use Proxies? {self.opbracket}y/n{self.closebrckt}{self.arrow}"
+            )
+            if self.mode.lower() == "y":
+                self.use_proxies = True
+                self.proxy_typee = input(
+                    f"{self.opbracket2}1{self.closebrckt2} http   | {self.opbracket2}2{self.closebrckt2} https\n{self.opbracket2}3{self.closebrckt2} socks4 | {self.opbracket2}4{self.closebrckt2} socks5\n{self.question}Proxy type{self.arrow}"
+                )
+                if self.proxy_typee == "1":
+                    self.proxy_type = "http"
+                elif self.proxy_typee == "2":
+                    self.proxy_type = "https"
+                elif self.proxy_typee == "3":
+                    self.proxy_type = "socks4"
+                elif self.proxy_typee == "4":
+                    self.proxy_type = "socks5"
+                else:
+                    self.use_proxies = False
+            else:
+                self.use_proxies = False
+
+            try:
+                self.delay = float(input(f"{self.question}Delay{self.arrow}"))
+            except Exception:
+                self.delay = 5
+            self.backup_delay = self.delay
+            try:
+                self.ratelimit_delay = float(
+                    input(f"{self.question}Rate limit Delay{self.arrow}")
+                )
+            except Exception:
+                self.ratelimit_delay = 300
+
+            print()
+        else:
+            with open("./data/config.json", "r") as file:
+                data = json.load(file)
+
+                disabled_cli_settings = data["cli_setup"]
+                enable_proxy = "proxy_type" in disabled_cli_settings
+                if enable_proxy:
+                    if disabled_cli_settings["proxy_type"] in [
+                        "http",
+                        "https",
+                        "socks4",
+                        "socks5",
+                    ]:
+                        self.use_proxies = True
+                        self.proxy_type = disabled_cli_settings["proxy_type"]
+                    else:
+                        self.use_proxies = False
+                else:
+                    self.use_proxies = False
+
+                if "delay" in disabled_cli_settings:
+                    self.delay = disabled_cli_settings["delay"]
+                    self.backup_delay = self.delay
+                else:
+                    self.delay = 5
+                    self.backup_delay = self.delay
+
+                if "ratelimit_delay" in disabled_cli_settings:
+                    self.ratelimit_delay = disabled_cli_settings["ratelimit_delay"]
+                else:
+                    self.ratelimit_delay = 300
+
+                if "scrape_user" in disabled_cli_settings:
+                    scrape_user = disabled_cli_settings["scrape_user"]
+
+                    if "guild_id" in scrape_user:
+                        self.guild_id = scrape_user["guild_id"]
+
+                    if "channel_id" in scrape_user:
+                        self.channel_id = scrape_user["channel_id"]
+
+                    if "invite" in scrape_user:
+                        self.invite = scrape_user["invite"]
 
     def stop(self):
         process = psutil.Process(os.getpid())
@@ -897,18 +948,19 @@ class Discord(object):
             return "success"
 
         async def scrape_users():
-            self.guild_id = input(f"{self.question}Enter Guild ID{self.arrow}")
-            self.channel_id = input(f"{self.question}Enter Channel ID{self.arrow}")
-            self.invite = (
-                input(f"{self.question}Invite{self.arrow}discord.gg/")
-                .replace("/", "")
-                .replace("discord.com", "")
-                .replace("discord.gg", "")
-                .replace("invite", "")
-                .replace("https:", "")
-                .replace("http:", "")
-                .replace("discordapp.com", "")
-            )
+            if self.cli_setup:
+                self.guild_id = input(f"{self.question}Enter Guild ID{self.arrow}")
+                self.channel_id = input(f"{self.question}Enter Channel ID{self.arrow}")
+                self.invite = (
+                    input(f"{self.question}Invite{self.arrow}discord.gg/")
+                    .replace("/", "")
+                    .replace("discord.com", "")
+                    .replace("discord.gg", "")
+                    .replace("invite", "")
+                    .replace("https:", "")
+                    .replace("http:", "")
+                    .replace("discordapp.com", "")
+                )
             try:
                 headers = await self.headers(self.tokens[0])
                 async with ClientSession(headers=headers) as hoemotion:
@@ -933,13 +985,19 @@ class Discord(object):
             print()
 
             members = scrape(self.tokens[0], self.guild_id, self.channel_id)
-            with open("data/users.txt", "w") as t:
-                data = ""
+
+            if self.cli_setup:
+                with open("data/users.txt", "w") as t:
+                    data = ""
+                    for member in members:
+                        if member not in self.users:
+                            self.users.append(member)
+                            data += member + "\n"
+                    t.write(data)
+            else:
                 for member in members:
                     if member not in self.users:
                         self.users.append(member)
-                        data += member + "\n"
-                t.write(data)
 
             print()
             logging.info(
@@ -953,8 +1011,9 @@ class Discord(object):
             return "success"
 
         async def mass_dm():
-            with open("data/users.txt", encoding="utf-8") as f:
-                self.users = [i.strip() for i in f]
+            if self.cli_setup:
+                with open("data/users.txt", encoding="utf-8") as f:
+                    self.users = [i.strip() for i in f]
             logging.info("Sending messages to %s users." % (len(self.users)))
             async with TaskPool(1_000) as pool:
                 for user in self.users:
@@ -1008,43 +1067,52 @@ class Discord(object):
                     self.stop()
             return "success"
 
-        print(
-            f"""
-{self.opbracket2}1{self.closebrckt2} Join Server
-{self.opbracket2}2{self.closebrckt2} Leave Server
-{self.opbracket2}3{self.closebrckt2} Scrape Users
-{self.opbracket2}4{self.closebrckt2} Mass DM
-{self.opbracket2}5{self.closebrckt2} Check tokens
-{self.opbracket2}6{self.closebrckt2} Exit"""
-        )
-        list = ["1", "2", "3", "4", "5", "6"]
-        choose = input(f"{self.question} Please Enter your option{self.arrow}")
-        while choose not in list:
+        if self.cli_setup:
+            print(
+                f"""
+    {self.opbracket2}1{self.closebrckt2} Join Server
+    {self.opbracket2}2{self.closebrckt2} Leave Server
+    {self.opbracket2}3{self.closebrckt2} Scrape Users
+    {self.opbracket2}4{self.closebrckt2} Mass DM
+    {self.opbracket2}5{self.closebrckt2} Check tokens
+    {self.opbracket2}6{self.closebrckt2} Exit"""
+            )
+            list = ["1", "2", "3", "4", "5", "6"]
             choose = input(f"{self.question} Please Enter your option{self.arrow}")
-        if choose == "1":
-            lol = await join_server()
-            if lol == "success":
-                return await self.start(first_start="false")
-        elif choose == "2":
-            lol = await leave_guild()
-            if lol == "success":
-                return await self.start(first_start="false")
-        elif choose == "3":
-            lol = await scrape_users()
-            if lol == "success":
-                return await self.start(first_start="false")
-        elif choose == "4":
-            lol = await mass_dm()
-            if lol == "success":
-                return await self.start(first_start="false")
-        elif choose == "5":
-            lol = await check_tokens()
-            if lol == "success":
-                return await self.start(first_start="false")
-        elif choose == "6":
-            logging.info("Byee!")
-            table()
-            self.stop()
+            while choose not in list:
+                choose = input(f"{self.question} Please Enter your option{self.arrow}")
+            if choose == "1":
+                lol = await join_server()
+                if lol == "success":
+                    return await self.start(first_start="false")
+            elif choose == "2":
+                lol = await leave_guild()
+                if lol == "success":
+                    return await self.start(first_start="false")
+            elif choose == "3":
+                lol = await scrape_users()
+                if lol == "success":
+                    return await self.start(first_start="false")
+            elif choose == "4":
+                lol = await mass_dm()
+                if lol == "success":
+                    return await self.start(first_start="false")
+            elif choose == "5":
+                lol = await check_tokens()
+                if lol == "success":
+                    return await self.start(first_start="false")
+            elif choose == "6":
+                logging.info("Byee!")
+                table()
+                self.stop()
+        else:
+            status = await scrape_users()
+            if status == "success":
+                status = await mass_dm()
+                if status == "success":
+                    logging.info("Byee!")
+                    table()
+                    self.stop()
 
 
 if __name__ == "__main__":
