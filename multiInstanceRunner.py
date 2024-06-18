@@ -2,7 +2,9 @@ import json
 import time
 import subprocess
 import requests
+from requests.auth import HTTPProxyAuth, HTTPBasicAuth
 import os
+import random
 
 
 def modify_config(guild_id, channel_id, blacklisted_roles: list):
@@ -31,6 +33,15 @@ def update_tokens(token):
         json.dump(tokens_data, tokens_file, indent=4)
 
 
+def get_random_proxy() -> str:
+    with open("./data/proxies.txt") as f:
+        proxyes = f.readlines()
+        proxy = proxyes[random.randrange(0, len(proxyes))]
+        proxy = proxy.replace("\n", "")
+
+    return proxy
+
+
 def main():
     processes = []
     runner_config = "runner_config.json"
@@ -43,18 +54,50 @@ def main():
     # Get the tokens from instances_data.txt
     with open(f"./data/{instances_file}", "r") as file:
         lines = file.readlines()
-        for line in lines:
+        for index, line in enumerate(lines):
             data = line.strip().split(";")[0].strip().split(",")
             token, guild_id, channel_id, *blacklisted_roles = data
             modify_config(guild_id, channel_id, blacklisted_roles)
             update_tokens(token)
 
-            # Get the discord username
-            response = requests.get(
-                "https://discord.com/api/users/@me",
-                headers={"authorization": token},
+            # Get and format the proxy
+            proxy = get_random_proxy()
+            splited_auth_url = proxy.split("@")
+            proxy_url = splited_auth_url[1].replace("\n", "").replace("\t", "")
+            proxy_username, proxy_password = (
+                splited_auth_url[0].replace("http://", "").split(":")
             )
-            discord_username = response.json()["username"]
+
+            print(
+                f"🔗 Using proxy:\n\tURL: {proxy_url}\n\tUsername: {proxy_username}\n\tPassword: {proxy_password}\n\tFull: {proxy}\
+                  "
+            )
+            # Get the discord username
+            # try:
+            #     auth = HTTPProxyAuth(username=proxy_username, password=proxy_password)
+            #     response = requests.get(
+            #         "https://discord.com/api/users/@me",
+            #         headers={"authorization": token},
+            #         proxies={
+            #             "http": f"http://{proxy_url}",
+            #             "https": f"http://{proxy_url}",
+            #         },
+            #         auth=auth
+            #     )
+
+            #     if response.status_code == 200:
+            #         discord_username = response.json()["username"]
+            #         discord_username = discord_username.replace(" ", "_")
+            #         discord_username = f"user-n-{index}-{discord_username}"
+            #     else:
+            #         print(
+            #             "❌ Can't retrive the discord username using an alternative username"
+            #         )
+            #         discord_username = f"user-n-{index}"
+            # except Exception as err:
+            #     print("❌ There was an error during the request")
+            #     print(err, "\n")
+            discord_username = f"user-n-{index}"
 
             # Start main.py
             if use_tmux:
